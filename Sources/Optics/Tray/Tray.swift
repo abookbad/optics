@@ -3,8 +3,8 @@ import Observation
 import QuickLookThumbnailing
 import SwiftUI
 
-/// A Tray is a small floating shelf: park files in it while you move between apps,
-/// then drag them (all or one) wherever they need to go. Nothing is copied; a Tray
+/// A Float is a small floating shelf: park files in it while you move between apps,
+/// then drag them (all or one) wherever they need to go. Nothing is copied; a Float
 /// only holds references.
 @MainActor
 @Observable
@@ -95,7 +95,7 @@ struct TrayView: View {
                                 Button("Open") { NSWorkspace.shared.open(url) }
                                 Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
                                 Divider()
-                                Button("Remove from Tray") { model.files.removeAll { $0 == url }; model.selection.remove(url) }
+                                Button("Remove from Float") { model.files.removeAll { $0 == url }; model.selection.remove(url) }
                             }
                     }
                 }
@@ -139,7 +139,7 @@ struct TrayView: View {
         }
         Divider()
         Button("Clear Selection") { model.selection.removeAll() }.disabled(model.selection.isEmpty)
-        Button("Close Tray", action: close)
+        Button("Close Float", action: close)
     }
 }
 

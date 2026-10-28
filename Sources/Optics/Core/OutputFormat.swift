@@ -28,6 +28,7 @@ enum OutputFormat: String, CaseIterable, Identifiable {
         case .animatedGIF: "GIF"
         case .markdown: "Markdown"
         case .heic: "HEIC"
+        case .webp: "WEBP"
         default: rawValue.uppercased()
         }
     }
@@ -50,7 +51,7 @@ enum OutputFormat: String, CaseIterable, Identifiable {
     /// Formats offered for a given input kind, in the order they appear around the lens.
     static func targets(for kind: FileKind) -> [OutputFormat] {
         switch kind {
-        case .image: [.jpg, .png, .heic, .webp, .pdf, .tiff, .gif, .avif, .bmp]
+        case .image: [.jpg, .png, .webp, .heic, .tiff, .avif, .bmp, .pdf]
         case .video: [.mp4, .mov, .animatedGIF, .webm, .m4a, .mp3, .mkv, .wav]
         case .audio: [.mp3, .m4a, .wav, .flac, .aiff, .ogg, .opus, .mp4]
         case .pdf: [.png, .jpg, .txt, .docx, .rtf, .html, .markdown]

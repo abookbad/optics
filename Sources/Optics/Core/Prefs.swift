@@ -23,9 +23,9 @@ enum Prefs {
 
     static func defaultModifiers(_ mode: LensMode) -> NSEvent.ModifierFlags {
         switch mode {
-        case .convert: .option
-        case .tools: .control
-        case .actions: [.control, .option]
+        case .convert: .shift
+        case .tools: .command
+        case .actions: .control
         }
     }
 

@@ -6,12 +6,12 @@ Hold a modifier mid-drag and a **Lens** opens under the cursor. Drop on a slice:
 
 | Lens | Default | What's on it |
 |---|---|---|
-| Convert | ⌥ | Formats for what you're dragging: images ⇄ JPG/PNG/HEIC/WebP/AVIF/TIFF/GIF/BMP/PDF, video → MP4/MOV/WebM/MKV/GIF/audio, audio ⇄ MP3/M4A/WAV/FLAC/AIFF/OGG/Opus, documents ⇄ PDF/DOCX/RTF/ODT/HTML/TXT/Markdown, anything → ZIP |
-| Tools | ⌃ | Compress, resize, rotate, cut out subject, clean metadata, read QR, collage, images → one PDF · compress/mute/speed/join/snapshot video · normalize, trim silence, mono, waveform video · merge/split/compress PDFs, pages → PNG, extract text · zip/extract |
-| Actions | ⌃⌥ | New Tray, copy paths, move/copy to…, AirDrop, open Terminal/iTerm here, reveal |
+| Convert | ⇧ | Formats for what you're dragging: images ⇄ JPG/PNG/HEIC/WebP/AVIF/TIFF/GIF/BMP/PDF, video → MP4/MOV/WebM/MKV/GIF/audio, audio ⇄ MP3/M4A/WAV/FLAC/AIFF/OGG/Opus, documents ⇄ PDF/DOCX/RTF/ODT/HTML/TXT/Markdown, anything → ZIP |
+| Tools | ⌘ | Compress, resize, rotate, cut out subject, clean metadata, read QR, collage, images → one PDF · compress/mute/speed/join/snapshot video · normalize, trim silence, mono, waveform video · merge/split/compress PDFs, pages → PNG, extract text · zip/extract |
+| Actions | ⌃ | Float, copy path, move/copy to…, AirDrop, open Terminal/iTerm here, reveal |
 
-**Trays** are floating shelves: park files, switch apps, drag them back out (one or all).
-The menu-bar window also has a drop well for when you'd rather not use modifiers.
+**Floats** are floating shelves: park files, switch apps, drag them back out (one or all).
+The wheel UI (geometry, palette, fade timing) is matched to captures of Tangerine's; see docs/TANGERINE_ANALYSIS.md.
 
 Results are always new files next to the originals (`photo compressed.jpg`, `clip 2x.mp4`, …);
 originals are never modified.

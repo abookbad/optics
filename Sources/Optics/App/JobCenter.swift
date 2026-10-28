@@ -77,9 +77,17 @@ enum Feedback {
         guard Prefs.playSounds else { return }
         NSSound(named: "Basso")?.play()
     }
-    static func tick() {
+    /// Soft tick + haptic as the drag crosses onto a new petal.
+    static func highlight() {
         NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
-        guard Prefs.playSounds else { return }
-        NSSound(named: "Tink")?.play()
+        guard Prefs.playSounds, let sound = highlightSound else { return }
+        sound.stop()
+        sound.play()
     }
+
+    private static let highlightSound: NSSound? = {
+        let s = NSSound(named: "Tink")?.copy() as? NSSound
+        s?.volume = 0.25
+        return s
+    }()
 }

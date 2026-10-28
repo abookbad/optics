@@ -21,13 +21,13 @@ enum Tool: String, CaseIterable, Identifiable {
         case .compressImage, .compressVideo, .compressPDF: "Compress"
         case .resizeImage: "Resize"
         case .removeBackground: "Cut Out"
-        case .stripMetadata: "Clean"
-        case .readQRCode: "Read QR"
+        case .stripMetadata: "Metadata"
+        case .readQRCode: "QR Code"
         case .makeCollage: "Collage"
-        case .imagesToPDF: "To One PDF"
+        case .imagesToPDF: "PDF"
         case .rotateImage: "Rotate"
         case .muteVideo: "Mute"
-        case .extractAudio: "Audio Only"
+        case .extractAudio: "Audio"
         case .speedUpVideo: "2× Speed"
         case .slowDownVideo: "½× Speed"
         case .joinVideos: "Join"
@@ -35,11 +35,11 @@ enum Tool: String, CaseIterable, Identifiable {
         case .normalizeAudio: "Normalize"
         case .trimSilence: "Trim Silence"
         case .monoAudio: "Mono"
-        case .waveformVideo: "Waveform Video"
+        case .waveformVideo: "Waveform"
         case .mergePDFs: "Merge"
-        case .splitPDF: "Split Pages"
-        case .pdfToImages: "Pages to PNG"
-        case .extractPDFText: "Extract Text"
+        case .splitPDF: "Split"
+        case .pdfToImages: "Images"
+        case .extractPDFText: "Text"
         case .extractArchive: "Extract"
         case .zipFiles: "Zip"
         }
@@ -47,13 +47,14 @@ enum Tool: String, CaseIterable, Identifiable {
 
     var symbol: String {
         switch self {
-        case .compressImage, .compressVideo, .compressPDF: "arrow.down.right.and.arrow.up.left"
-        case .resizeImage: "arrow.up.left.and.down.right.magnifyingglass"
+        case .compressImage, .compressVideo, .compressPDF: "arrow.down.forward.and.arrow.up.backward"
+        case .resizeImage: "arrow.up.left.and.arrow.down.right"
         case .removeBackground: "person.crop.rectangle"
-        case .stripMetadata: "eye.slash"
+        case .stripMetadata: "tag"
         case .readQRCode: "qrcode.viewfinder"
         case .makeCollage: "square.grid.2x2"
-        case .imagesToPDF, .mergePDFs: "doc.on.doc"
+        case .imagesToPDF: "doc.richtext"
+        case .mergePDFs: "doc.on.doc"
         case .rotateImage: "rotate.right"
         case .muteVideo: "speaker.slash"
         case .extractAudio: "music.note"
@@ -76,7 +77,7 @@ enum Tool: String, CaseIterable, Identifiable {
     /// Tools that need more than one file to make sense.
     var minimumFiles: Int {
         switch self {
-        case .joinVideos, .mergePDFs: 2
+        case .joinVideos, .mergePDFs, .makeCollage: 2
         default: 1
         }
     }
@@ -84,7 +85,7 @@ enum Tool: String, CaseIterable, Identifiable {
     static func tools(for kind: FileKind, count: Int) -> [Tool] {
         let all: [Tool]
         switch kind {
-        case .image: all = [.compressImage, .resizeImage, .removeBackground, .stripMetadata, .readQRCode, .makeCollage, .imagesToPDF, .rotateImage]
+        case .image: all = [.compressImage, .stripMetadata, .resizeImage, .rotateImage, .removeBackground, .readQRCode, .imagesToPDF, .makeCollage]
         case .video: all = [.compressVideo, .muteVideo, .extractAudio, .speedUpVideo, .slowDownVideo, .joinVideos, .snapshotVideo, .stripMetadata]
         case .audio: all = [.normalizeAudio, .trimSilence, .monoAudio, .waveformVideo, .stripMetadata]
         case .pdf: all = [.mergePDFs, .splitPDF, .compressPDF, .pdfToImages, .extractPDFText]
@@ -101,12 +102,15 @@ enum FileAction: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// Clockwise from twelve o'clock on the Actions wheel.
+    static let wheel: [FileAction] = [.airDrop, .newTray, .copyTo, .moveTo, .copyPaths, .openTerminal]
+
     var label: String {
         switch self {
-        case .newTray: "New Tray"
-        case .copyPaths: "Copy Paths"
-        case .moveTo: "Move To…"
-        case .copyTo: "Copy To…"
+        case .newTray: "Float"
+        case .copyPaths: "Copy Path"
+        case .moveTo: "Move"
+        case .copyTo: "Copy"
         case .airDrop: "AirDrop"
         case .openTerminal: "Terminal"
         case .revealInFinder: "Reveal"
@@ -115,12 +119,12 @@ enum FileAction: String, CaseIterable, Identifiable {
 
     var symbol: String {
         switch self {
-        case .newTray: "tray.and.arrow.down"
-        case .copyPaths: "link"
-        case .moveTo: "folder.badge.plus"
-        case .copyTo: "plus.square.on.square"
-        case .airDrop: "airplayaudio"
-        case .openTerminal: "terminal"
+        case .newTray: "pin.fill"
+        case .copyPaths: "doc.text"
+        case .moveTo: "folder"
+        case .copyTo: "doc.on.doc"
+        case .airDrop: AirDropGlyph.name
+        case .openTerminal: "apple.terminal"
         case .revealInFinder: "magnifyingglass"
         }
     }

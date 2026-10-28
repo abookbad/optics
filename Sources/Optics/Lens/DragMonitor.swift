@@ -1,11 +1,12 @@
 import AppKit
 
-/// Watches system-wide mouse drags. When a file drag is under way and the user
-/// presses one of the lens modifier combinations, the matching lens opens under the cursor.
+/// Watches system-wide mouse drags. When a file drag is under way and the user holds one
+/// of the wheel modifiers, the matching wheel opens under the cursor.
 ///
-/// How a "file drag" is detected: every drag session writes to the shared drag
-/// pasteboard, bumping its changeCount. A changeCount that moved since the mouse went
-/// down, and that carries file URLs, means the user is dragging files right now.
+/// A "file drag" is detected from the shared drag pasteboard: every drag session bumps its
+/// changeCount, so a changeCount that moved since mouse-down, carrying file URLs, means
+/// files are being dragged right now. While that's true, modifier state is polled as well
+/// as observed, because flag changes aren't always delivered to global monitors mid-drag.
 @MainActor
 final class DragMonitor {
     static let shared = DragMonitor()
@@ -14,13 +15,14 @@ final class DragMonitor {
     private var changeCountAtMouseDown = NSPasteboard(name: .drag).changeCount
     private var draggingFiles: [URL]?
     private var shownMode: LensMode?
+    private var poll: Timer?
 
     func start() {
         guard monitors.isEmpty else { return }
         let handlers: [(NSEvent.EventTypeMask, (NSEvent) -> Void)] = [
             (.leftMouseDown, { [weak self] _ in self?.mouseDown() }),
-            (.leftMouseDragged, { [weak self] e in self?.dragged(e) }),
-            (.flagsChanged, { [weak self] e in self?.flagsChanged(e) }),
+            (.leftMouseDragged, { [weak self] _ in self?.dragged() }),
+            (.flagsChanged, { [weak self] _ in self?.evaluate() }),
             (.leftMouseUp, { [weak self] _ in self?.mouseUp() }),
         ]
         for (mask, handler) in handlers {
@@ -38,40 +40,54 @@ final class DragMonitor {
 
     private func mouseDown() {
         changeCountAtMouseDown = NSPasteboard(name: .drag).changeCount
-        draggingFiles = nil
-        shownMode = nil
+        reset()
     }
 
-    private func dragged(_ event: NSEvent) {
+    private func dragged() {
         if draggingFiles == nil {
             let pb = NSPasteboard(name: .drag)
             guard pb.changeCount != changeCountAtMouseDown else { return }
             let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
             guard !urls.isEmpty else { return }
             draggingFiles = urls
+            startPolling()
         }
-        evaluate(event.modifierFlags)
+        evaluate()
     }
 
-    private func flagsChanged(_ event: NSEvent) {
-        guard draggingFiles != nil else { return }
-        evaluate(event.modifierFlags)
+    private func startPolling() {
+        poll?.invalidate()
+        poll = Timer.scheduledTimer(withTimeInterval: 1.0 / 30, repeats: true) { _ in
+            MainActor.assumeIsolated {
+                let monitor = DragMonitor.shared
+                // Mouse released somewhere we didn't hear about (e.g. dropped onto our own panel).
+                if NSEvent.pressedMouseButtons & 1 == 0 { monitor.mouseUp(); return }
+                monitor.evaluate()
+            }
+        }
     }
 
-    private func evaluate(_ flags: NSEvent.ModifierFlags) {
+    private func evaluate() {
         guard let files = draggingFiles else { return }
-        let pressed = flags.intersection(Prefs.relevantModifiers)
-        // Exact match so ⌃⌥ doesn't also trigger the ⌥ lens.
-        let mode = LensMode.allCases.first { Prefs.modifiers(for: $0) == pressed && !pressed.isEmpty }
-        guard let mode, mode != shownMode else { return }
+        let pressed = NSEvent.modifierFlags.intersection(Prefs.relevantModifiers)
+        guard !pressed.isEmpty else { return }
+        // Exact match so ⌃⇧ doesn't also open the ⇧ wheel. Releasing the key keeps the wheel open.
+        guard let mode = LensMode.allCases.first(where: { Prefs.modifiers(for: $0) == pressed }), mode != shownMode else { return }
         shownMode = mode
         LensPanel.shared.present(mode: mode, files: files, at: NSEvent.mouseLocation)
     }
 
     private func mouseUp() {
+        let wasShowing = shownMode != nil
+        reset()
+        // Give the panel a beat to receive the drop before it disappears.
+        if wasShowing { DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { LensPanel.shared.dismissIfIdle() } }
+    }
+
+    private func reset() {
+        poll?.invalidate()
+        poll = nil
         draggingFiles = nil
         shownMode = nil
-        // Give the panel a beat to receive the drop before it disappears.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { LensPanel.shared.dismissIfIdle() }
     }
 }
