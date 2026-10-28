@@ -25,18 +25,14 @@ enum Shell {
             process.standardOutput = out
             process.standardError = out
             process.standardInput = FileHandle.nullDevice
-            var collected = Data()
-            let lock = NSLock()
+            let buffer = OutputBuffer()
             out.fileHandleForReading.readabilityHandler = { handle in
-                let chunk = handle.availableData
-                lock.lock(); collected.append(chunk); lock.unlock()
+                buffer.append(handle.availableData)
             }
             process.terminationHandler = { p in
                 out.fileHandleForReading.readabilityHandler = nil
-                lock.lock()
-                collected.append(out.fileHandleForReading.readDataToEndOfFile())
-                let text = String(decoding: collected, as: UTF8.self)
-                lock.unlock()
+                buffer.append(out.fileHandleForReading.readDataToEndOfFile())
+                let text = buffer.text
                 if p.terminationStatus == 0 {
                     cont.resume(returning: text)
                 } else {
@@ -56,4 +52,12 @@ enum Shell {
         }
         return try await run(bin, ["-y", "-hide_banner", "-loglevel", "error"] + arguments)
     }
+}
+
+/// Thread-safe accumulator for a child process's combined output.
+private final class OutputBuffer: @unchecked Sendable {
+    private var data = Data()
+    private let lock = NSLock()
+    func append(_ chunk: Data) { lock.lock(); data.append(chunk); lock.unlock() }
+    var text: String { lock.lock(); defer { lock.unlock() }; return String(decoding: data, as: UTF8.self) }
 }

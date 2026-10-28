@@ -36,9 +36,7 @@ enum ImageEngine {
         let out = OutputNaming.url(nextTo: url, ext: format.fileExtension)
         switch format {
         case .webp:
-            try await writeWebP(from: url, to: out, quality: Settings.imageQuality)
-        case .avif:
-            try await Shell.ffmpeg(["-i", url.path, "-c:v", "libaom-av1", "-still-picture", "1", "-crf", "30", out.path])
+            try await writeWebP(from: url, to: out, quality: Prefs.imageQuality)
         case .pdf:
             return try PDFEngine.imagesToPDF([url])
         default:
@@ -49,11 +47,12 @@ enum ImageEngine {
             case .tiff: .tiff
             case .bmp: .bmp
             case .gif: .gif
+            case .avif: UTType("public.avif") ?? .heic
             default: throw OpticsError("Images can't become \(format.label).")
             }
             var image = try load(url)
             if format == .jpg || format == .bmp { image = flattened(image) }
-            let lossy: Double? = (format == .jpg || format == .heic) ? max(Settings.imageQuality, 0.85) : nil
+            let lossy: Double? = (format == .jpg || format == .heic || format == .avif) ? max(Prefs.imageQuality, 0.85) : nil
             try write(image, to: out, type: type, quality: lossy)
         }
         return [out]
@@ -100,6 +99,11 @@ enum ImageEngine {
         return ctx.makeImage() ?? image
     }
 
+    /// Short, familiar extensions: "jpg" rather than ImageIO's "jpeg".
+    private static func fileExt(_ type: UTType) -> String {
+        type == .jpeg ? "jpg" : (type.preferredFilenameExtension ?? "png")
+    }
+
     private static func outputType(for url: URL) -> UTType {
         let t = UTType(filenameExtension: url.pathExtension.lowercased()) ?? .png
         let writable = CGImageDestinationCopyTypeIdentifiers() as? [String] ?? []
@@ -110,7 +114,7 @@ enum ImageEngine {
 
     static func compress(_ url: URL) async throws -> URL {
         let ext = url.pathExtension.lowercased()
-        let quality = Settings.imageQuality
+        let quality = Prefs.imageQuality
         if ext == "webp" {
             let out = OutputNaming.url(nextTo: url, suffix: " compressed", ext: "webp")
             try await writeWebP(from: url, to: out, quality: quality)
@@ -119,7 +123,7 @@ enum ImageEngine {
         // PNG and other lossless sources become HEIC-quality JPEGs only if that's smaller;
         // keep the original type when it's a lossy format already.
         let keepType: UTType = ["jpg", "jpeg", "heic", "heif"].contains(ext) ? outputType(for: url) : .jpeg
-        let out = OutputNaming.url(nextTo: url, suffix: " compressed", ext: keepType.preferredFilenameExtension ?? "jpg")
+        let out = OutputNaming.url(nextTo: url, suffix: " compressed", ext: fileExt(keepType))
         var image = try load(url)
         if keepType == .jpeg { image = flattened(image) }
         try write(image, to: out, type: keepType, quality: quality)
@@ -134,8 +138,8 @@ enum ImageEngine {
 
     static func resize(_ url: URL) throws -> URL {
         let type = outputType(for: url)
-        let out = OutputNaming.url(nextTo: url, suffix: " \(Settings.resizeMaxEdge)px", ext: type.preferredFilenameExtension ?? "png")
-        try write(resized(try load(url), maxEdge: Settings.resizeMaxEdge), to: out, type: type, quality: 0.9)
+        let out = OutputNaming.url(nextTo: url, suffix: " \(Prefs.resizeMaxEdge)px", ext: fileExt(type))
+        try write(resized(try load(url), maxEdge: Prefs.resizeMaxEdge), to: out, type: type, quality: 0.9)
         return out
     }
 
@@ -147,7 +151,7 @@ enum ImageEngine {
         ctx.rotate(by: -.pi / 2)
         ctx.draw(img, in: CGRect(x: 0, y: 0, width: img.width, height: img.height))
         let type = outputType(for: url)
-        let out = OutputNaming.url(nextTo: url, suffix: " rotated", ext: type.preferredFilenameExtension ?? "png")
+        let out = OutputNaming.url(nextTo: url, suffix: " rotated", ext: fileExt(type))
         try write(ctx.makeImage()!, to: out, type: type, quality: 0.92)
         return out
     }
@@ -155,7 +159,7 @@ enum ImageEngine {
     /// Re-encodes pixels only: EXIF, GPS, IPTC, XMP and maker notes are dropped.
     static func stripMetadata(_ url: URL) throws -> URL {
         let type = outputType(for: url)
-        let out = OutputNaming.url(nextTo: url, suffix: " clean", ext: type.preferredFilenameExtension ?? "png")
+        let out = OutputNaming.url(nextTo: url, suffix: " clean", ext: fileExt(type))
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
               let dest = CGImageDestinationCreateWithURL(out as CFURL, type.identifier as CFString, 1, nil)
         else { throw OpticsError("Couldn't read \(url.lastPathComponent).") }

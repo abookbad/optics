@@ -49,7 +49,7 @@ final class JobCenter {
         switch output {
         case .files(let urls):
             records[i].outputs = urls
-            if Settings.revealOutput, !urls.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(urls) }
+            if Prefs.revealOutput, !urls.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(urls) }
             Feedback.success()
             Toast.show("Done", detail: urls.count == 1 ? urls[0].lastPathComponent : "\(urls.count) files created")
         case .text(let text, let title):
@@ -70,16 +70,16 @@ final class JobCenter {
 
 enum Feedback {
     static func success() {
-        guard Settings.playSounds else { return }
+        guard Prefs.playSounds else { return }
         NSSound(named: "Glass")?.play()
     }
     static func failure() {
-        guard Settings.playSounds else { return }
+        guard Prefs.playSounds else { return }
         NSSound(named: "Basso")?.play()
     }
     static func tick() {
         NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
-        guard Settings.playSounds else { return }
+        guard Prefs.playSounds else { return }
         NSSound(named: "Tink")?.play()
     }
 }

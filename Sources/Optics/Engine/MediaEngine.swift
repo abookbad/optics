@@ -14,14 +14,14 @@ enum MediaEngine {
         case .webm: args = i + ["-c:v", "libvpx-vp9", "-crf", "32", "-b:v", "0", "-c:a", "libopus"]
         case .mkv: args = i + ["-c", "copy"]
         case .animatedGIF:
-            let w = Settings.gifWidth, fps = Settings.gifFPS
+            let w = Prefs.gifWidth, fps = Prefs.gifFPS
             args = i + ["-vf", "fps=\(fps),scale='min(\(w),iw)':-2:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=sierra2_4a", "-loop", "0"]
         case .m4a: args = i + ["-vn", "-c:a", "aac", "-b:a", "256k"]
         case .mp3: args = i + ["-vn", "-c:a", "libmp3lame", "-q:a", "2"]
         case .wav: args = i + ["-vn", "-c:a", "pcm_s16le"]
         case .flac: args = i + ["-vn", "-c:a", "flac"]
         case .aiff: args = i + ["-vn", "-c:a", "pcm_s16be"]
-        case .ogg: args = i + ["-vn", "-c:a", "libvorbis", "-q:a", "6"]
+        case .ogg: args = i + ["-vn", "-c:a", "vorbis", "-strict", "experimental", "-ac", "2", "-q:a", "6"]
         case .opus: args = i + ["-vn", "-c:a", "libopus", "-b:a", "160k"]
         default: throw OpticsError("Media can't become \(format.label).")
         }
@@ -35,7 +35,7 @@ enum MediaEngine {
 
     static func compressVideo(_ url: URL) async throws -> URL {
         let out = OutputNaming.url(nextTo: url, suffix: " compressed", ext: "mp4")
-        try await Shell.ffmpeg(["-i", url.path, "-c:v", "libx264", "-preset", "medium", "-crf", String(Settings.videoCRF),
+        try await Shell.ffmpeg(["-i", url.path, "-c:v", "libx264", "-preset", "medium", "-crf", String(Prefs.videoCRF),
                                 "-vf", "scale='min(1920,iw)':-2", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart",
                                 "-pix_fmt", "yuv420p", out.path])
         return out
@@ -152,7 +152,7 @@ enum MediaEngine {
         case "wav": ["-c:a", "pcm_s16le"]
         case "aiff": ["-c:a", "pcm_s16be"]
         case "flac": ["-c:a", "flac"]
-        case "ogg": ["-c:a", "libvorbis", "-q:a", "6"]
+        case "ogg": ["-c:a", "vorbis", "-strict", "experimental", "-ac", "2", "-q:a", "6"]
         case "opus": ["-c:a", "libopus", "-b:a", "160k"]
         default: ["-c:a", "aac", "-b:a", "256k"]
         }

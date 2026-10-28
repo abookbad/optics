@@ -8,7 +8,7 @@ enum LensMode: String, CaseIterable, Identifiable {
 }
 
 /// Persisted preferences. Backed by UserDefaults so @AppStorage views and the engine agree.
-enum Settings {
+enum Prefs {
     private static let defaults = UserDefaults.standard
 
     static func modifiers(for mode: LensMode) -> NSEvent.ModifierFlags {

@@ -21,7 +21,7 @@ enum Tool: String, CaseIterable, Identifiable {
         case .compressImage, .compressVideo, .compressPDF: "Compress"
         case .resizeImage: "Resize"
         case .removeBackground: "Cut Out"
-        case .stripMetadata: "Strip Metadata"
+        case .stripMetadata: "Clean"
         case .readQRCode: "Read QR"
         case .makeCollage: "Collage"
         case .imagesToPDF: "To One PDF"

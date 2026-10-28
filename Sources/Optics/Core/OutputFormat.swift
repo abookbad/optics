@@ -32,6 +32,21 @@ enum OutputFormat: String, CaseIterable, Identifiable {
         }
     }
 
+    var symbol: String {
+        switch self {
+        case .jpg, .png, .heic, .webp, .tiff, .bmp, .gif, .avif: "photo"
+        case .mp4, .mov, .webm, .mkv: "film"
+        case .animatedGIF: "photo.stack"
+        case .m4a, .mp3, .wav, .flac, .aiff, .ogg, .opus: "waveform"
+        case .pdf: "doc.richtext"
+        case .docx, .rtf, .odt: "doc.text"
+        case .html: "chevron.left.forwardslash.chevron.right"
+        case .txt: "text.alignleft"
+        case .markdown: "number"
+        case .zip: "doc.zipper"
+        }
+    }
+
     /// Formats offered for a given input kind, in the order they appear around the lens.
     static func targets(for kind: FileKind) -> [OutputFormat] {
         switch kind {

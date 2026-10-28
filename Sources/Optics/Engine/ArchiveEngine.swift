@@ -6,7 +6,7 @@ enum ArchiveEngine {
         let ditto = URL(fileURLWithPath: "/usr/bin/ditto")
         if urls.count == 1 {
             let out = OutputNaming.url(nextTo: urls[0], ext: urls[0].pathExtension.isEmpty ? "zip" : urls[0].pathExtension + ".zip")
-            try await Shell.run(ditto, ["-c", "-k", "--sequesterRsrc", "--keepParent", urls[0].path, out.path])
+            try await Shell.run(ditto, ["-c", "-k", "--norsrc", "--keepParent", urls[0].path, out.path])
             return out
         }
         // Several items: stage them as hard copies in a temp folder so the archive has one root.
@@ -16,7 +16,7 @@ enum ArchiveEngine {
         defer { try? FileManager.default.removeItem(at: staging) }
         for u in urls { try FileManager.default.copyItem(at: u, to: root.appendingPathComponent(u.lastPathComponent)) }
         let out = OutputNaming.unique(in: urls[0].deletingLastPathComponent(), base: "Archive", ext: "zip")
-        try await Shell.run(ditto, ["-c", "-k", "--sequesterRsrc", "--keepParent", root.path, out.path])
+        try await Shell.run(ditto, ["-c", "-k", "--norsrc", "--keepParent", root.path, out.path])
         return out
     }
 
